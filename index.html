@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BTV News Networks — Broadcast Frame Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Noto+Sans+Telugu:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand-lockup">
+      <div class="brand"><span class="dot"></span>BTV NEWS</div>
+      <div class="brand-copy"><strong>BTV News Studio</strong><span>Professional News Video Editor</span></div>
+    </div>
+    <div class="header-actions">
+      <div class="project-chip"><span>PROJECT</span><strong>Untitled project</strong></div>
+      <div class="status-line" id="statusLine">Upload a video to enable export</div>
+    </div>
+  </header>
+
+  <div class="console editor-shell">
+
+    <aside class="rail media-rail">
+      <div class="panel-heading"><span class="panel-kicker">01 / SOURCE</span><strong>Media</strong></div>
+      <div class="section-title">Footage &amp; Branding</div>
+
+      <div class="field-group">
+        <label class="field-label">SOURCE VIDEO</label>
+        <label class="upload-zone" id="videoZone">
+          Click or drop a video file — any format or size (MP4, MOV, MKV, AVI, WebM…)
+          <span class="fname" id="videoFname"></span>
+          <input type="file" id="videoInput" accept="video/*,.mp4,.webm,.mov,.m4v,.avi,.mkv" multiple>
+        </label>
+        <div class="video-playlist">
+          <div class="video-controls">
+            <button class="mini-btn red" id="addVideosBtn" type="button">＋ ADD VIDEOS</button>
+          </div>
+          <div class="video-count" id="videoCount">0 videos added</div>
+          <div class="video-list" id="videoList"></div>
+          <button class="mini-btn" id="clearVideosBtn" type="button">CLEAR ALL VIDEOS</button>
+        </div>
+
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">YOUTUBE VIDEO LINK</label>
+        <div class="yt-tools">
+          <input type="text" id="youtubeUrl" placeholder="Paste YouTube / Shorts / youtu.be link">
+          <button class="mini-btn red" id="youtubeLoadBtn" type="button">LOAD</button>
+        </div>
+        <button class="mini-btn" id="youtubeClearBtn" type="button" style="width:100%;margin-top:8px;">CLEAR YOUTUBE VIDEO</button>
+        <div class="hint">Paste a YouTube link to play it inside the BTV frame preview. YouTube playback is preview-only; browser security prevents direct canvas export of the embedded stream.</div>
+      </div>
+
+    </aside>
+
+    <main class="preview-column">
+      <div class="stage" id="stage">
+        <div class="empty-stage" id="emptyState">
+          <div class="big">No footage loaded</div>
+          Upload a video on the left to see it drop into the BTV headline frame live here.
+        </div>
+        <div class="canvas-frame" id="canvasFrame" style="display:none;">
+          <canvas id="stageCanvas"></canvas>
+        </div>
+        <div class="youtube-preview" id="youtubePreview" style="display:none;">
+          <div class="yt-placeholder" id="youtubePlaceholder">Paste a YouTube link on the left to play it here.</div>
+          <iframe id="youtubeFrame" title="BTV YouTube Preview" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="display:none;"></iframe>
+        </div>
+      </div>
+
+      <section class="timeline">
+        <div class="timeline-heading"><span class="panel-kicker">PLAYBACK / TRIM</span><span>IN / OUT POINTS</span></div>
+        <div class="transport-bar">
+          <div class="transport-buttons">
+            <button class="mini-btn" id="prevVideoBtn" type="button" title="Previous video">◀</button>
+            <button class="export-btn play-control" id="playBtn" type="button">▶ PLAY PREVIEW</button>
+            <button class="mini-btn" id="nextVideoBtn" type="button" title="Next video">▶</button>
+          </div>
+          <div class="transport-actions">
+            <button class="mini-btn" id="previewTrimBtn" type="button">▶ PREVIEW TRIM</button>
+            <button class="mini-btn" id="resetTrimBtn" type="button">↺ RESET</button>
+            <button class="mini-btn red" id="downloadTrimBtn" type="button">⬇ DOWNLOAD EDITED VIDEO</button>
+          </div>
+        </div>
+        <div class="trim-panel">
+          <div class="trim-full trim-heading"><label class="field-label">TRIM RANGE</label><button class="mini-btn" id="downloadOriginalBtn" type="button">⬇ DOWNLOAD ORIGINAL</button></div>
+          <div>
+            <label class="field-label">START</label>
+            <input type="range" id="trimStart" min="0" max="0" step="0.01" value="0" class="vol-slider">
+            <div class="trim-time">Start: <strong id="trimStartValue">00:00</strong></div>
+          </div>
+          <div>
+            <label class="field-label">END</label>
+            <input type="range" id="trimEnd" min="0" max="0" step="0.01" value="0" class="vol-slider">
+            <div class="trim-time">End: <strong id="trimEndValue">00:00</strong></div>
+          </div>
+          <div class="hint trim-full">Original download keeps the uploaded file unchanged. Trim/export creates a new BTV-branded video.</div>
+        </div>
+      </section>
+    </main>
+
+    <aside class="rail properties-rail">
+      <div class="panel-heading"><span class="panel-kicker">02 / OUTPUT</span><strong>Properties</strong></div>
+      <details class="property-section">
+        <summary>Template</summary>
+        <div class="field-group">
+          <select id="templateSkin">
+            <option value="classic" selected>Clean Telugu News</option>
+            <option value="dynamic">BTV Follow / Social</option>
+            <option value="redworld">World News — Red</option>
+            <option value="blue">Telugu News — Blue</option>
+            <option value="dual">TV News — Dual Window</option>
+            <option value="breaking">Breaking News</option>
+            <option value="modern">Modern Red Lower Third</option>
+            <option value="minimal">Minimal News</option>
+          </select>
+          <div class="hint">Reference-inspired news layouts, including dual-window and breaking.</div>
+        </div>
+        <div class="field-group" id="socialCtaGroup" style="display:none;">
+          <label class="field-label">SUBSCRIBE STRIP TEXT</label>
+          <input type="text" id="socialCta" value="For more videos!  Follow Btv Media">
+        </div>
+      </details>
+
+      <details class="property-section">
+        <summary>Branding &amp; Framing</summary>
+      <div class="field-group">
+        <label class="field-label">CHANNEL LOGO</label>
+        <label class="upload-zone has-file" id="logoZone">
+          BTV logo loaded — click to replace
+          <span class="fname" id="logoFname">btv-logo.png (default)</span>
+          <input type="file" id="logoInput" accept="image/*">
+        </label>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">LOGO SIZE</label>
+        <input type="range" id="logoSize" min="80" max="280" value="190" class="vol-slider">
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">LOGO STYLE</label>
+        <div class="ratio-toggle">
+          <button id="logoBoxedBtn" class="active">BOXED</button>
+          <button id="logoFloatBtn">FLOATING</button>
+        </div>
+        <div class="hint">Floating places the transparent BTV logo directly over the footage; no white box is added.</div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">VIDEO FIT</label>
+        <div class="ratio-toggle">
+          <button id="fitSmartBtn" class="active">SMART (no crop)</button>
+          <button id="fitFillBtn">FILL (crop)</button>
+        </div>
+        <div class="hint">Smart keeps every face fully in frame with soft blurred bars; Fill crops edges to fill the screen.</div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">FRAME ADJUST — ZOOM</label>
+        <input type="range" id="zoomVal" min="100" max="200" value="100" class="vol-slider">
+      </div>
+      <div class="field-group">
+        <div class="two-col">
+          <div>
+            <label class="field-label">PAN X</label>
+            <input type="range" id="panXVal" min="-100" max="100" value="0" class="vol-slider" style="margin-top:8px;">
+          </div>
+          <div>
+            <label class="field-label">PAN Y</label>
+            <input type="range" id="panYVal" min="-100" max="100" value="0" class="vol-slider" style="margin-top:8px;">
+          </div>
+        </div>
+        <button type="button" class="reset-control" id="panResetBtn">↺ RESET PAN X / Y</button>
+        <div class="hint">Nudge the footage manually, then use Reset Pan to return both X and Y to the center.</div>
+      </div>
+
+      </details>
+
+      <details class="property-section">
+        <summary>Typography &amp; Colors</summary>
+      <div class="section-title">Typography &amp; Colors</div>
+
+      <div class="field-group">
+        <label class="field-label">TOGGLE TEXT SIZE</label>
+        <input type="range" id="toggleTextSize" min="10" max="22" value="13" class="vol-slider">
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">BTV FOOTER FONT</label>
+        <select id="footerFont">
+          <option value="Space Grotesk" selected>Space Grotesk</option>
+          <option value="Inter">Inter</option>
+          <option value="Archivo Black">Archivo Black</option>
+          <option value="Noto Sans Telugu">Noto Sans Telugu</option>
+          <option value="Georgia">Georgia</option>
+        </select>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">BTV FOOTER TEXT SIZE</label>
+        <input type="range" id="footerTextSize" min="16" max="42" value="25" class="vol-slider">
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">FOOTER BACKGROUND</label>
+        <input type="color" id="footerBgColor" value="#E4202A" style="width:100%;height:38px;border:1px solid var(--line);background:var(--panel-2);">
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">BTV FOOTER TEXT COLOR</label>
+        <input type="color" id="footerTextColor" value="#FFFFFF" style="width:100%;height:38px;border:1px solid var(--line);background:var(--panel-2);">
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">BTV BACKGROUND COLOR</label>
+        <input type="color" id="btvBgColor" value="#1730C4" style="width:100%;height:38px;border:1px solid var(--line);background:var(--panel-2);">
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">FOOTER MESSAGE</label>
+        <input type="text" id="footerMessage" value="For more videos! Follow Btv Media">
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">SOCIAL ICON SIZE</label>
+        <input type="range" id="socialIconSize" min="18" max="44" value="28" class="vol-slider">
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">FRAME RATIO</label>
+        <div class="ratio-toggle">
+          <button id="ratio169" class="active">16:9</button>
+          <button id="ratio916">9:16</button>
+        </div>
+        <div class="hint">16:9 broadcast/YouTube · 9:16 reels/shorts</div>
+      </div>
+      </details>
+
+      <details class="property-section">
+        <summary>News Graphics</summary>
+      <div class="section-title">News Graphics</div>
+
+      <div class="field-group">
+        <label class="field-label">TRENDING / STORY TAG</label>
+        <select id="storyTemplate">
+          <option value="number" selected>Headline</option>
+          <option value="breaking">🔴 Breaking News</option>
+          <option value="special">✨ Special Story</option>
+          <option value="local">📍 Local News</option>
+          <option value="exclusive">⚫ Exclusive</option>
+          <option value="live">🔵 Live Update</option>
+        </select>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">HEADLINE TEXT</label>
+        <input type="text" id="headlineCaption" value="తాజా వార్తల అప్‌డేట్">
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">TICKER TEXT</label>
+        <input type="text" id="tickerText" value="తాజా వార్తలు • రాజకీయాలు • స్థానిక సమాచారం • ముఖ్య అప్‌డేట్స్">
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">TICKER SPEED</label>
+        <input type="range" id="tickerSpeed" min="1" max="10" value="5" class="vol-slider">
+        <div class="speed-readout"><span>SLOW</span><strong id="tickerSpeedValue">5×</strong><span>FAST</span></div>
+      </div>
+
+      <div class="section-title">Present News</div>
+
+      <div class="field-group">
+        <label class="field-label">QUICK NEWS BUTTONS</label>
+        <div class="quick-news-buttons" id="quickNewsButtons">
+          <button class="mini-btn red quick-news active" type="button" data-title="ప్రధాన వార్తలు" data-tag="HEADLINES">ప్రధాన వార్తలు</button>
+          <button class="mini-btn quick-news" type="button" data-title="బ్రేకింగ్ న్యూస్" data-tag="BREAKING">బ్రేకింగ్</button>
+          <button class="mini-btn quick-news" type="button" data-title="తాజా అప్‌డేట్" data-tag="LIVE">లైవ్</button>
+          <button class="mini-btn quick-news" type="button" data-title="ఎక్స్‌క్లూజివ్ న్యూస్" data-tag="EXCLUSIVE">ఎక్స్‌క్లూజివ్</button>
+          <button class="mini-btn quick-news" type="button" data-title="స్థానిక వార్తలు" data-tag="LOCAL">లోకల్</button>
+        </div>
+        <div class="news-live-row">
+          <button class="mini-btn" id="addNewsBtn" type="button">＋ ADD NEWS BUTTON</button>
+          <button class="mini-btn" id="removeNewsBtn" type="button">− REMOVE SELECTED</button>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="news-grid">
+          <div class="full"><label class="field-label">NEWS HEADLINE</label><input type="text" id="newsHeadline" value="ప్రధాన వార్తల అప్‌డేట్"></div>
+          <div class="full"><label class="field-label">SUB HEADLINE</label><input type="text" id="newsSubHeadline" value="తాజా సమాచారం BTV Mediaలో"></div>
+          <div><label class="field-label">LOCATION</label><input type="text" id="newsLocation" value="SRIKAKULAM"></div>
+          <div><label class="field-label">REPORTER</label><input type="text" id="newsReporter" value="BTV MEDIA"></div>
+        </div>
+      </div>
+      <div class="field-group">
+        <div class="news-live-row">
+          <button class="mini-btn" id="newsOverlayBtn" type="button">NEWS LOWER-THIRD: ON</button>
+        </div>
+        <div class="hint">Adds the current story headline, location and reporter to the branded frame. Date/time is generated automatically.</div>
+      </div>
+      </details>
+
+      <dialog class="news-dialog" id="newsButtonDialog">
+        <form id="newsButtonForm">
+          <strong>ADD QUICK NEWS BUTTON</strong>
+          <label class="field-label" for="newsButtonText">BUTTON TEXT</label>
+          <input type="text" id="newsButtonText" maxlength="60" autocomplete="off" required>
+          <div class="dialog-actions">
+            <button class="mini-btn" id="cancelNewsBtn" type="button">CANCEL</button>
+            <button class="mini-btn red" type="submit">ADD BUTTON</button>
+          </div>
+        </form>
+      </dialog>
+
+      <details class="property-section">
+        <summary>Broadcast &amp; Watermark</summary>
+      <div class="section-title">Broadcast Controls</div>
+
+      <div class="field-group compact-switches">
+        <div class="toggle-row"><label class="field-label">FRAME BORDER</label><div class="switch on" id="borderToggle"></div></div>
+        <div class="toggle-row"><label class="field-label">SUBSCRIBE PILL</label><div class="switch on" id="subToggle"></div></div>
+        <div class="toggle-row"><label class="field-label">LIVE BADGE</label><div class="switch" id="liveBadgeBtnSwitch"></div></div>
+        <div class="toggle-row"><label class="field-label">SOCIAL FOOTER</label><div class="switch on" id="socialFooterToggle"></div></div>
+        <div class="toggle-row"><label class="field-label">CENTER WATERMARK</label><div class="switch on" id="watermarkToggle"></div></div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">WATERMARK TEXT</label>
+        <input type="text" id="watermarkText" value="BTV MEDIA" maxlength="24">
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">WATERMARK SIZE</label>
+        <input type="range" id="watermarkSize" min="35" max="180" value="70" class="vol-slider">
+        <div class="speed-readout"><span>SMALL</span><strong id="watermarkSizeValue">70%</strong><span>LARGE</span></div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">WATERMARK POSITION — LEFT / RIGHT</label>
+        <input type="range" id="watermarkX" min="-100" max="100" value="0" class="vol-slider">
+        <div class="speed-readout"><span>LEFT</span><strong id="watermarkXValue">CENTER</strong><span>RIGHT</span></div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">WATERMARK POSITION — UP / DOWN</label>
+        <input type="range" id="watermarkY" min="-100" max="100" value="0" class="vol-slider">
+        <div class="speed-readout"><span>UP</span><strong id="watermarkYValue">CENTER</strong><span>DOWN</span></div>
+        <div class="wm-move-row">
+          <button class="mini-btn" id="wmUpBtn" type="button">↑ UP</button>
+          <button class="mini-btn" id="wmLeftBtn" type="button">← LEFT</button>
+          <button class="mini-btn" id="wmResetBtn" type="button">RESET</button>
+          <button class="mini-btn" id="wmRightBtn" type="button">RIGHT →</button>
+          <button class="mini-btn" id="wmDownBtn" type="button">↓ DOWN</button>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">SOCIAL FOOTER TEXT</label>
+        <input type="text" id="socialFooterText" value="For more videos!  Follow Btv Media">
+        <div class="hint">YouTube • X/Twitter • Facebook • Instagram icons are included automatically.</div>
+      </div>
+      </details>
+
+      <details class="property-section">
+        <summary>Audio &amp; Export</summary>
+      <div class="section-title">Audio Mix</div>
+
+      <div class="field-group">
+        <label class="field-label">BACKGROUND MUSIC / VOICEOVER</label>
+        <label class="upload-zone" id="audioZone">
+          Click or drop an audio file (MP3, WAV) — optional
+          <span class="fname" id="audioFname"></span>
+          <input type="file" id="audioInput" accept="audio/*">
+        </label>
+        <button class="mini-btn" id="removeBgAudioBtn" type="button" disabled>REMOVE AUDIO</button>
+      </div>
+
+      <div class="field-group">
+        <div class="toggle-row">
+          <label class="field-label">VIDEO'S OWN AUDIO</label>
+          <div class="switch on" id="videoAudioToggle"></div>
+        </div>
+        <input type="range" id="videoVolume" min="0" max="100" value="100" class="vol-slider">
+      </div>
+
+      <div class="field-group">
+        <div class="toggle-row">
+          <label class="field-label">BACKGROUND TRACK</label>
+          <div class="switch on" id="bgAudioToggle"></div>
+        </div>
+        <input type="range" id="bgVolume" min="0" max="100" value="70" class="vol-slider">
+      </div>
+
+      <div class="field-group">
+        <div class="toggle-row">
+          <label class="field-label">AUDIO WAVE INDICATOR</label>
+          <div class="switch on" id="waveToggle"></div>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">EXPORT QUALITY</label>
+        <select id="exportQuality">
+          <option value="high">High Quality (larger file)</option>
+          <option value="balanced" selected>Balanced</option>
+          <option value="compact">Compact (smaller file, same resolution)</option>
+        </select>
+        <div class="hint">Compact lowers bitrate, not resolution — sharpness holds up far better than shrinking the frame size would.</div>
+      </div>
+      </details>
+    </aside>
+
+  </div>
+
+  <footer>BTV NEWS NETWORKS — broadcast frame console · everything renders locally in your browser</footer>
+</div>
+
+<video id="sourceVideo" style="display:none;" playsinline></video>
+<audio id="bgAudio" style="display:none;" loop></audio>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden>
+  <span class="toast-mark" aria-hidden="true"></span>
+  <div class="toast-copy"><strong id="toastTitle"></strong><p id="toastMessage"></p></div>
+  <button class="toast-dismiss" id="toastDismiss" type="button" aria-label="Dismiss notification">×</button>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
