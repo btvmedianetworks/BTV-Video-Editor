@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BTV News Networks — Broadcast Frame Console</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Noto+Sans+Telugu:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700;800;900&family=Montserrat:wght@400;500;600;700;800;900&family=Noto+Sans:wght@400;500;600;700;800;900&family=Noto+Sans+Telugu:wght@500;700&family=Open+Sans:wght@400;500;600;700;800&family=Oswald:wght@400;500;600;700&family=Poppins:wght@400;500;600;700;800;900&family=Roboto+Condensed:wght@400;500;600;700;800;900&family=Roboto:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -192,18 +192,23 @@
       </div>
 
       <div class="field-group">
-        <label class="field-label">BTV FOOTER FONT</label>
+        <label class="field-label" for="footerFont">FOOTER FONT</label>
         <select id="footerFont">
-          <option value="Space Grotesk" selected>Space Grotesk</option>
+          <option value="Arial">Arial</option>
+          <option value="Roboto">Roboto</option>
+          <option value="Poppins">Poppins</option>
+          <option value="Montserrat">Montserrat</option>
           <option value="Inter">Inter</option>
-          <option value="Archivo Black">Archivo Black</option>
-          <option value="Noto Sans Telugu">Noto Sans Telugu</option>
+          <option value="Open Sans">Open Sans</option>
+          <option value="Noto Sans">Noto Sans</option>
+          <option value="Oswald">Oswald</option>
+          <option value="Roboto Condensed" selected>Roboto Condensed</option>
           <option value="Georgia">Georgia</option>
         </select>
       </div>
 
       <div class="field-group">
-        <label class="field-label">BTV FOOTER TEXT SIZE</label>
+        <label class="field-label">TEXT SIZE</label>
         <input type="range" id="footerTextSize" min="16" max="42" value="25" class="vol-slider">
       </div>
 
@@ -247,25 +252,21 @@
       <div class="section-title">News Graphics</div>
 
       <div class="field-group">
-        <label class="field-label">TRENDING / STORY TAG</label>
-        <select id="storyTemplate">
-          <option value="number" selected>Headline</option>
-          <option value="breaking">🔴 Breaking News</option>
-          <option value="special">✨ Special Story</option>
-          <option value="local">📍 Local News</option>
-          <option value="exclusive">⚫ Exclusive</option>
-          <option value="live">🔵 Live Update</option>
+        <label class="field-label" for="newsType">NEWS TYPE</label>
+        <select id="newsType">
+          <option selected>BREAKING NEWS</option>
+          <option>LATEST NEWS</option>
+          <option>SPECIAL STORY</option>
+          <option>LOCAL NEWS</option>
+          <option>EXCLUSIVE</option>
+          <option>LIVE UPDATE</option>
+          <option>NEWS</option>
         </select>
       </div>
 
       <div class="field-group">
-        <label class="field-label">HEADLINE TEXT</label>
-        <input type="text" id="headlineCaption" value="తాజా వార్తల అప్‌డేట్">
-      </div>
-
-      <div class="field-group">
-        <label class="field-label">TICKER TEXT</label>
-        <input type="text" id="tickerText" value="తాజా వార్తలు • రాజకీయాలు • స్థానిక సమాచారం • ముఖ్య అప్‌డేట్స్">
+        <label class="field-label" for="tickerText">NEWS CONTENT</label>
+        <textarea id="tickerText" rows="3">తాజా వార్తలు • రాజకీయాలు • స్థానిక సమాచారం • ముఖ్య అప్‌డేట్స్</textarea>
       </div>
 
       <div class="field-group">
@@ -274,50 +275,11 @@
         <div class="speed-readout"><span>SLOW</span><strong id="tickerSpeedValue">5×</strong><span>FAST</span></div>
       </div>
 
-      <div class="section-title">Present News</div>
-
       <div class="field-group">
-        <label class="field-label">QUICK NEWS BUTTONS</label>
-        <div class="quick-news-buttons" id="quickNewsButtons">
-          <button class="mini-btn red quick-news active" type="button" data-title="ప్రధాన వార్తలు" data-tag="HEADLINES">ప్రధాన వార్తలు</button>
-          <button class="mini-btn quick-news" type="button" data-title="బ్రేకింగ్ న్యూస్" data-tag="BREAKING">బ్రేకింగ్</button>
-          <button class="mini-btn quick-news" type="button" data-title="తాజా అప్‌డేట్" data-tag="LIVE">లైవ్</button>
-          <button class="mini-btn quick-news" type="button" data-title="ఎక్స్‌క్లూజివ్ న్యూస్" data-tag="EXCLUSIVE">ఎక్స్‌క్లూజివ్</button>
-          <button class="mini-btn quick-news" type="button" data-title="స్థానిక వార్తలు" data-tag="LOCAL">లోకల్</button>
-        </div>
-        <div class="news-live-row">
-          <button class="mini-btn" id="addNewsBtn" type="button">＋ ADD NEWS BUTTON</button>
-          <button class="mini-btn" id="removeNewsBtn" type="button">− REMOVE SELECTED</button>
-        </div>
+        <div class="toggle-row"><label class="field-label">NEWS TICKER</label><div class="switch on" id="tickerToggle"></div></div>
       </div>
 
-      <div class="field-group">
-        <div class="news-grid">
-          <div class="full"><label class="field-label">NEWS HEADLINE</label><input type="text" id="newsHeadline" value="ప్రధాన వార్తల అప్‌డేట్"></div>
-          <div class="full"><label class="field-label">SUB HEADLINE</label><input type="text" id="newsSubHeadline" value="తాజా సమాచారం BTV Mediaలో"></div>
-          <div><label class="field-label">LOCATION</label><input type="text" id="newsLocation" value="SRIKAKULAM"></div>
-          <div><label class="field-label">REPORTER</label><input type="text" id="newsReporter" value="BTV MEDIA"></div>
-        </div>
-      </div>
-      <div class="field-group">
-        <div class="news-live-row">
-          <button class="mini-btn" id="newsOverlayBtn" type="button">NEWS LOWER-THIRD: ON</button>
-        </div>
-        <div class="hint">Adds the current story headline, location and reporter to the branded frame. Date/time is generated automatically.</div>
-      </div>
       </details>
-
-      <dialog class="news-dialog" id="newsButtonDialog">
-        <form id="newsButtonForm">
-          <strong>ADD QUICK NEWS BUTTON</strong>
-          <label class="field-label" for="newsButtonText">BUTTON TEXT</label>
-          <input type="text" id="newsButtonText" maxlength="60" autocomplete="off" required>
-          <div class="dialog-actions">
-            <button class="mini-btn" id="cancelNewsBtn" type="button">CANCEL</button>
-            <button class="mini-btn red" type="submit">ADD BUTTON</button>
-          </div>
-        </form>
-      </dialog>
 
       <details class="property-section">
         <summary>Broadcast &amp; Watermark</summary>
@@ -399,10 +361,6 @@
       </div>
 
       <div class="field-group">
-        <div class="toggle-row">
-          <label class="field-label">AUDIO WAVE INDICATOR</label>
-          <div class="switch on" id="waveToggle"></div>
-        </div>
       </div>
 
       <div class="field-group">

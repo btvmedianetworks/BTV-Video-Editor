@@ -821,7 +821,7 @@ body{
   grid-template-columns:
     minmax(228px,270px)
     minmax(0,1fr)
-    minmax(270px,310px);
+    minmax(340px,360px);
   gap:0;
   overflow:hidden;
   border-bottom:1px solid var(--line);
@@ -850,8 +850,37 @@ body{
 .properties-rail{
   grid-column:3;
   grid-row:1;
+  padding:16px 15px 22px;
+  gap:14px;
   border-right:0;
   border-left:1px solid var(--line);
+}
+
+.properties-rail .field-label{
+  font-size:11px;
+  letter-spacing:.4px;
+}
+
+.properties-rail input[type=text],
+.properties-rail input[type=number],
+.properties-rail input[type=url],
+.properties-rail select,
+.properties-rail textarea{
+  min-height:40px;
+  padding:10px 12px;
+  font-size:13px;
+}
+
+.properties-rail textarea{
+  min-height:92px;
+  line-height:1.5;
+}
+
+.properties-rail .mini-btn,
+.properties-rail .reset-control,
+.properties-rail .ratio-toggle button{
+  min-height:36px;
+  font-size:11px;
 }
 
 .panel-heading{
@@ -1086,9 +1115,9 @@ input[type=range]{
   position:relative;
   cursor:pointer;
   list-style:none;
-  padding:12px 18px 11px 2px;
+  padding:13px 18px 12px 2px;
   color:var(--white);
-  font:700 11px var(--mono);
+  font:700 12px var(--mono);
   letter-spacing:.3px;
 }
 
@@ -1119,7 +1148,7 @@ input[type=range]{
 }
 
 .property-section .field-group + .field-group{
-  margin-top:11px;
+  margin-top:13px;
 }
 
 .property-section .field-group .hint{
@@ -1431,7 +1460,7 @@ footer{
     grid-template-columns:
       minmax(210px,245px)
       minmax(0,1fr)
-      minmax(245px,275px);
+      minmax(300px,320px);
   }
 
   .rail{
@@ -1720,16 +1749,26 @@ body,
 /* INPUTS */
 input[type="text"],
 input[type="number"],
+input[type="url"],
 select,
+textarea,
 input[type="color"] {
     background: #09111D !important;
     border: 1px solid #344B68 !important;
     color: #FFFFFF !important;
+  font: inherit;
+}
+
+textarea {
+  min-height: 76px;
+  resize: vertical;
 }
 
 input[type="text"]:focus,
 input[type="number"]:focus,
-select:focus {
+input[type="url"]:focus,
+select:focus,
+textarea:focus {
     border-color: #4A7CFF !important;
 }
 
