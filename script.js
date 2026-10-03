@@ -1,4 +1,15 @@
 (function(){
+  if (sessionStorage.getItem('btvEditorAuthenticated') !== 'true') {
+    window.location.replace('login.html');
+    return;
+  }
+
+  const logoutBtn = document.getElementById('logoutBtn');
+  logoutBtn.addEventListener('click',()=>{
+    sessionStorage.removeItem('btvEditorAuthenticated');
+    window.location.replace('index.html');
+  });
+
   const videoInput = document.getElementById('videoInput');
   const logoInput = document.getElementById('logoInput');
   const videoZone = document.getElementById('videoZone');
