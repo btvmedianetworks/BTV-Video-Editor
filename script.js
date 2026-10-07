@@ -58,6 +58,22 @@
   let toastTimer = null;
   let trimDownloadPending = false;
 
+  const splitHeadline = document.getElementById('splitHeadline');
+  const splitSubheadline = document.getElementById('splitSubheadline');
+  const splitDescription = document.getElementById('splitDescription');
+  const addSplitImagesBtn = document.getElementById('addSplitImagesBtn');
+  const splitImagesInput = document.getElementById('splitImagesInput');
+  const splitImagesList = document.getElementById('splitImagesList');
+  const splitImageDuration = document.getElementById('splitImageDuration');
+  const splitTransition = document.getElementById('splitTransition');
+  const splitAlignLeftBtn = document.getElementById('splitAlignLeftBtn');
+  const splitAlignCenterBtn = document.getElementById('splitAlignCenterBtn');
+  const splitAlignRightBtn = document.getElementById('splitAlignRightBtn');
+  const splitTextSize = document.getElementById('splitTextSize');
+
+  let splitImages = []; // Array of { id, name, img, url }
+  let splitTextAlign = 'center';
+
   function showToast(title,message,type='info',duration=3500){
     clearTimeout(toastTimer);
     toastTitle.textContent=title;
@@ -85,7 +101,7 @@
   document.addEventListener('click',event=>{
     if(!trimDownloadPending || !(event.target instanceof Element)) return;
     const link=event.target.closest('a[download]');
-    if(!link || link.download!=='btv-edited-video.webm') return;
+    if(!link || (link.download!=='btv-edited-video.webm' && link.download!=='btv-edited-video.mp4')) return;
     trimDownloadPending=false;
     showToast('Download started','Your edited video download has started.','success');
   },true);
@@ -740,7 +756,131 @@
       if (liveBadgeBtnSwitch) liveBadgeBtnSwitch.classList.toggle('on', skin === 'redworld');
       showLiveBadge = (skin === 'redworld');
     }
+    draw();
   });
+
+  function renderSplitImagesList() {
+    if (!splitImagesList) return;
+    splitImagesList.innerHTML = '';
+
+    if (splitImages.length === 0) {
+      splitImagesList.innerHTML = '<div style="font-size:11px;color:rgba(255,255,255,0.5);padding:4px 0;">No images uploaded. Text content will display cleanly.</div>';
+      draw();
+      return;
+    }
+
+    splitImages.forEach((item, index) => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.06);padding:4px 6px;border-radius:4px;border:1px solid rgba(255,255,255,0.1);margin-bottom:4px;';
+
+      const thumb = document.createElement('img');
+      thumb.src = item.url;
+      thumb.style.cssText = 'width:32px;height:32px;object-fit:cover;border-radius:3px;';
+
+      const label = document.createElement('span');
+      label.textContent = `IMAGE ${index + 1}`;
+      label.style.cssText = 'font-size:11px;font-weight:700;color:#fff;flex:1;';
+
+      const upBtn = document.createElement('button');
+      upBtn.type = 'button';
+      upBtn.textContent = '↑';
+      upBtn.className = 'mini-btn';
+      upBtn.style.cssText = 'padding:2px 6px;height:22px;line-height:18px;font-size:10px;';
+      upBtn.disabled = (index === 0);
+      upBtn.onclick = () => moveSplitImage(index, -1);
+
+      const downBtn = document.createElement('button');
+      downBtn.type = 'button';
+      downBtn.textContent = '↓';
+      downBtn.className = 'mini-btn';
+      downBtn.style.cssText = 'padding:2px 6px;height:22px;line-height:18px;font-size:10px;';
+      downBtn.disabled = (index === splitImages.length - 1);
+      downBtn.onclick = () => moveSplitImage(index, 1);
+
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.textContent = '✕';
+      removeBtn.className = 'mini-btn red';
+      removeBtn.style.cssText = 'padding:2px 6px;height:22px;line-height:18px;font-size:10px;';
+      removeBtn.onclick = () => removeSplitImage(index);
+
+      row.appendChild(thumb);
+      row.appendChild(label);
+      row.appendChild(upBtn);
+      row.appendChild(downBtn);
+      row.appendChild(removeBtn);
+      splitImagesList.appendChild(row);
+    });
+
+    draw();
+  }
+
+  function addSplitImages(files) {
+    const fileArray = Array.from(files || []);
+    if (!fileArray.length) return;
+
+    let loadedCount = 0;
+    fileArray.forEach(file => {
+      if (!file.type.startsWith('image/')) return;
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        splitImages.push({
+          id: Math.random().toString(36).substring(2, 9),
+          name: file.name,
+          img: img,
+          url: url
+        });
+        loadedCount++;
+        renderSplitImagesList();
+      };
+      img.src = url;
+    });
+  }
+
+  function removeSplitImage(index) {
+    if (index >= 0 && index < splitImages.length) {
+      try { URL.revokeObjectURL(splitImages[index].url); } catch(e){}
+      splitImages.splice(index, 1);
+      renderSplitImagesList();
+    }
+  }
+
+  function moveSplitImage(index, delta) {
+    const newIndex = index + delta;
+    if (newIndex >= 0 && newIndex < splitImages.length) {
+      const temp = splitImages[index];
+      splitImages[index] = splitImages[newIndex];
+      splitImages[newIndex] = temp;
+      renderSplitImagesList();
+    }
+  }
+
+  if (addSplitImagesBtn && splitImagesInput) {
+    addSplitImagesBtn.addEventListener('click', () => splitImagesInput.click());
+    splitImagesInput.addEventListener('change', (e) => {
+      addSplitImages(e.target.files);
+      splitImagesInput.value = '';
+    });
+  }
+
+  if (splitHeadline) splitHeadline.addEventListener('input', draw);
+  if (splitSubheadline) splitSubheadline.addEventListener('input', draw);
+  if (splitDescription) splitDescription.addEventListener('input', draw);
+  if (splitImageDuration) splitImageDuration.addEventListener('change', draw);
+  if (splitTransition) splitTransition.addEventListener('change', draw);
+  if (splitTextSize) splitTextSize.addEventListener('input', draw);
+
+  function setSplitAlign(align) {
+    splitTextAlign = align;
+    if (splitAlignLeftBtn) splitAlignLeftBtn.classList.toggle('active', align === 'left');
+    if (splitAlignCenterBtn) splitAlignCenterBtn.classList.toggle('active', align === 'center');
+    if (splitAlignRightBtn) splitAlignRightBtn.classList.toggle('active', align === 'right');
+    draw();
+  }
+  if (splitAlignLeftBtn) splitAlignLeftBtn.addEventListener('click', () => setSplitAlign('left'));
+  if (splitAlignCenterBtn) splitAlignCenterBtn.addEventListener('click', () => setSplitAlign('center'));
+  if (splitAlignRightBtn) splitAlignRightBtn.addEventListener('click', () => setSplitAlign('right'));
 
   logoBoxedBtn.addEventListener('click', ()=>{
     logoStyle = 'boxed';
@@ -830,36 +970,72 @@
     ctx.closePath();
   }
 
+  function getWrappedLines(context, text, maxWidth) {
+    if (!text) return [];
+    const words = String(text).split(' ');
+    const lines = [];
+    let currentLine = words[0] || '';
+
+    for (let i = 1; i < words.length; i++) {
+      const word = words[i];
+      const width = context.measureText(currentLine + " " + word).width;
+      if (width < maxWidth) {
+        currentLine += " " + word;
+      } else {
+        lines.push(currentLine);
+        currentLine = word;
+      }
+    }
+    if (currentLine) lines.push(currentLine);
+    return lines;
+  }
+
   function drawFrame(){
     const w = canvas.width, h = canvas.height;
     youtubeHitAreas = [];
     ctx.fillStyle = '#000';
     ctx.fillRect(0,0,w,h);
 
+    const isDual = (skin === 'dual');
+    const leftW = isDual ? w * 0.38 : 0;
+    const videoX = isDual ? leftW : 0;
+    const videoY = 0;
+    const videoW = w - videoX;
+    const videoH = h;
+
     if(hasVideo && sourceVideo.videoWidth){
+      ctx.save();
+      if(isDual){
+        ctx.beginPath();
+        ctx.rect(videoX, videoY, videoW, videoH);
+        ctx.clip();
+        ctx.fillStyle = '#07070a';
+        ctx.fillRect(videoX, videoY, videoW, videoH);
+      }
+
       const vw = sourceVideo.videoWidth, vh = sourceVideo.videoHeight;
-      const canvasRatio = w/h, videoRatio = vw/vh;
+      const boxW = isDual ? videoW : w;
+      const boxH = isDual ? videoH : h;
+      const canvasRatio = boxW/boxH, videoRatio = vw/vh;
       const zoom = Math.max(1, (zoomVal.value||100)/100);
       const panXFrac = (panXVal.value||0)/100;
       const panYFrac = (panYVal.value||0)/100;
 
       if(fitMode === 'fill'){
-        // FILL: crop to cover the whole frame (can cut heads/edges on strong ratio mismatches)
+        // FILL: crop to cover the whole box
         let sx,sy,sw,sh;
         if(videoRatio > canvasRatio){
           sh = vh; sw = vh*canvasRatio; sy = 0; sx = (vw-sw)/2;
         } else {
           sw = vw; sh = vw/canvasRatio; sx = 0; sy = (vh-sh)/2;
         }
-        // zoom tightens the crop; pan slides within the leftover slack
         sw /= zoom; sh /= zoom;
         let baseSx = (vw-sw)/2, baseSy = (vh-sh)/2;
         sx = Math.min(Math.max(baseSx + panXFrac*baseSx, 0), vw-sw);
         sy = Math.min(Math.max(baseSy + panYFrac*baseSy, 0), vh-sh);
-        ctx.drawImage(sourceVideo, sx, sy, sw, sh, 0, 0, w, h);
+        ctx.drawImage(sourceVideo, sx, sy, sw, sh, videoX, videoY, boxW, boxH);
       } else {
-        // SMART: never crop the subject — show the full frame, letterboxed,
-        // with a soft blurred fill behind it so there are no hard black bars.
+        // SMART: letterboxed fit inside boxW x boxH
         ctx.save();
         ctx.filter = 'blur(24px) brightness(0.55)';
         let bsx,bsy,bsw,bsh;
@@ -868,27 +1044,26 @@
         } else {
           bsw = vw; bsh = vw/canvasRatio; bsx = 0; bsy = (vh-bsh)/2;
         }
-        ctx.drawImage(sourceVideo, bsx, bsy, bsw, bsh, -20, -20, w+40, h+40);
+        ctx.drawImage(sourceVideo, bsx, bsy, bsw, bsh, videoX-20, videoY-20, boxW+40, boxH+40);
         ctx.restore();
 
         let dw,dh,dx,dy;
         if(videoRatio > canvasRatio){
-          dw = w; dh = w/videoRatio; dx = 0; dy = (h-dh)/2;
+          dw = boxW; dh = boxW/videoRatio; dx = videoX; dy = videoY + (boxH-dh)/2;
         } else {
-          dh = h; dw = h*videoRatio; dy = 0; dx = (w-dw)/2;
+          dh = boxH; dw = boxH*videoRatio; dy = videoY; dx = videoX + (boxW-dw)/2;
         }
-        // zoom enlarges the drawn frame (overflow is simply clipped by the canvas);
-        // pan nudges its position within a moderate range
         dw *= zoom; dh *= zoom;
-        dx = (w-dw)/2 + panXFrac*(w*0.18);
-        dy = (h-dh)/2 + panYFrac*(h*0.18);
+        dx += panXFrac*(boxW*0.18);
+        dy += panYFrac*(boxH*0.18);
         ctx.drawImage(sourceVideo, 0, 0, vw, vh, dx, dy, dw, dh);
       }
+      ctx.restore();
     }
 
     const unit = h/540; // scale factor baseline against 540px height
-  const toggleTextScale = Number(toggleTextSize?.value || 13)/13;
-  const brandColor = safeColor(btvBgColor?.value || '#1730C4','#1730C4');
+    const toggleTextScale = Number(toggleTextSize?.value || 13)/13;
+    const brandColor = safeColor(btvBgColor?.value || '#1730C4','#1730C4');
 
     // ---- CENTER WATERMARK (semi-transparent, sits over the footage) ----
     if(showWatermark && hasVideo){
@@ -918,32 +1093,208 @@
       ctx.globalAlpha=1; ctx.restore();
     }
 
-    // ---- TV NEWS DUAL-WINDOW REFERENCE BACKDROP ----
+    // ---- TV NEWS DUAL-WINDOW / SPLIT-CONTENT INDEPENDENT LEFT PANEL ----
     if(skin === 'dual'){
-      const leftW = w*0.30;
-      const rightX = leftW + 18*unit;
-      const rightW = w-rightX-16*unit;
-      const topY = 28*unit;
-      const bottomY = h-104*unit;
       ctx.save();
-      ctx.fillStyle='rgba(55,0,8,.94)';
-      ctx.fillRect(0,0,leftW,h);
-      ctx.fillStyle='rgba(15,0,5,.30)';
-      ctx.fillRect(rightX,topY,rightW,bottomY-topY);
-      ctx.strokeStyle='#fff'; ctx.lineWidth=4*unit;
-      ctx.strokeRect(rightX,topY,rightW,bottomY-topY);
-      ctx.strokeStyle='#E4202A'; ctx.lineWidth=2*unit;
-      ctx.strokeRect(6*unit,6*unit,leftW-12*unit,h-12*unit);
-      ctx.fillStyle='#E4202A'; ctx.fillRect(0,h-8*unit,w,8*unit);
-      ctx.fillStyle='#fff'; ctx.textAlign='center'; ctx.textBaseline='middle';
-      ctx.font=`900 ${28*unit}px 'Archivo Black',sans-serif`;
-      ctx.fillText('BTV NEWS',leftW/2,h*0.28);
-      ctx.fillStyle='#E4202A'; ctx.fillRect(20*unit,h*0.40,leftW-40*unit,4*unit);
-      ctx.fillStyle='#fff'; ctx.font=`800 ${18*unit}px 'Noto Sans Telugu','Space Grotesk',sans-serif`;
-      ctx.fillText('ప్రస్తుతం వార్తలు',leftW/2,h*0.49);
-      ctx.font=`700 ${13*unit}px 'Noto Sans Telugu','Space Grotesk',sans-serif`;
-      ctx.fillStyle='rgba(255,255,255,.78)';
-      ctx.fillText('తాజా సమాచారం • LIVE',leftW/2,h*0.55);
+      // 1. Independent Left Content Region Background
+      const leftBgGrad = ctx.createLinearGradient(0, 0, leftW, h);
+      leftBgGrad.addColorStop(0, '#2b0307');
+      leftBgGrad.addColorStop(1, '#150104');
+      ctx.fillStyle = leftBgGrad;
+      ctx.fillRect(0, 0, leftW, h);
+
+      // Red dividing border between Left Content and Right Video
+      ctx.fillStyle = '#E4202A';
+      ctx.fillRect(leftW - 4*unit, 0, 4*unit, h);
+
+      // Inner frame box
+      const margin = 12 * unit;
+      const panelX = margin;
+      const panelY = margin;
+      const panelW = leftW - margin * 2 - 4 * unit;
+      const panelH = h - margin * 2;
+
+      ctx.strokeStyle = 'rgba(228,32,42,0.6)';
+      ctx.lineWidth = 2 * unit;
+      roundRectPath(panelX, panelY, panelW, panelH, 6 * unit);
+      ctx.stroke();
+
+      // 2. Top Header Pill
+      let currentY = panelY + 20 * unit;
+      const align = splitTextAlign || 'center';
+      let textX = panelX + panelW / 2;
+      if (align === 'left') textX = panelX + 16 * unit;
+      else if (align === 'right') textX = panelX + panelW - 16 * unit;
+
+      const tagH = 26 * unit;
+      const tagW = Math.min(panelW - 20 * unit, 140 * unit);
+      let tagX = panelX + (panelW - tagW) / 2;
+      if (align === 'left') tagX = panelX + 16 * unit;
+      if (align === 'right') tagX = panelX + panelW - tagW - 16 * unit;
+
+      ctx.fillStyle = '#E4202A';
+      roundRectPath(tagX, currentY, tagW, tagH, tagH / 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = `900 ${14 * unit}px 'Archivo Black', sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('BTV SPECIAL', tagX + tagW / 2, currentY + tagH / 2 + 1);
+
+      currentY += tagH + 20 * unit;
+
+      // 3. Render Slideshow Images if available
+      const numImages = splitImages.length;
+      if (numImages > 0) {
+        const durationVal = Math.max(0.5, Number(splitImageDuration?.value || 3));
+        const transitionType = splitTransition?.value || 'fade';
+        const currentTime = (sourceVideo && isFinite(sourceVideo.currentTime)) ? sourceVideo.currentTime : 0;
+
+        const totalCycle = numImages * durationVal;
+        const cycleTime = currentTime % totalCycle;
+        const currIdx = Math.floor(cycleTime / durationVal) % numImages;
+        const nextIdx = (currIdx + 1) % numImages;
+        const timeInCurrent = cycleTime - (currIdx * durationVal);
+
+        const transDuration = Math.min(0.6, durationVal * 0.3);
+        const isTrans = (timeInCurrent > durationVal - transDuration) && (numImages > 1) && (transitionType !== 'cut');
+        const t = isTrans ? (timeInCurrent - (durationVal - transDuration)) / transDuration : 0;
+
+        const maxImgW = panelW - 24 * unit;
+        const maxImgH = h * 0.28;
+
+        const drawSingleImage = (imgItem, alpha, offsetX) => {
+          if (!imgItem || !imgItem.img || !imgItem.img.complete || !imgItem.img.naturalWidth) return;
+          const nw = imgItem.img.naturalWidth;
+          const nh = imgItem.img.naturalHeight;
+          const imgAspect = nw / nh;
+
+          let drawImgW = maxImgW;
+          let drawImgH = drawImgW / imgAspect;
+          if (drawImgH > maxImgH) {
+            drawImgH = maxImgH;
+            drawImgW = drawImgH * imgAspect;
+          }
+
+          let drawImgX = panelX + (panelW - drawImgW) / 2 + offsetX;
+          if (align === 'left') drawImgX = panelX + 12 * unit + offsetX;
+          if (align === 'right') drawImgX = panelX + panelW - drawImgW - 12 * unit + offsetX;
+
+          ctx.save();
+          ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+          roundRectPath(drawImgX, currentY, drawImgW, drawImgH, 8 * unit);
+          ctx.clip();
+          ctx.drawImage(imgItem.img, drawImgX, currentY, drawImgW, drawImgH);
+          ctx.restore();
+
+          ctx.save();
+          ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+          ctx.strokeStyle = '#FFFFFF';
+          ctx.lineWidth = 2 * unit;
+          roundRectPath(drawImgX, currentY, drawImgW, drawImgH, 8 * unit);
+          ctx.stroke();
+          ctx.restore();
+        };
+
+        const currentImg = splitImages[currIdx];
+        const nextImg = splitImages[nextIdx];
+
+        if (!isTrans) {
+          drawSingleImage(currentImg, 1.0, 0);
+        } else if (transitionType === 'fade') {
+          drawSingleImage(currentImg, 1.0 - t, 0);
+          drawSingleImage(nextImg, t, 0);
+        } else if (transitionType === 'slideLeft') {
+          drawSingleImage(currentImg, 1.0 - t * 0.2, -maxImgW * t);
+          drawSingleImage(nextImg, t * 0.8 + 0.2, maxImgW * (1.0 - t));
+        } else if (transitionType === 'slideRight') {
+          drawSingleImage(currentImg, 1.0 - t * 0.2, maxImgW * t);
+          drawSingleImage(nextImg, t * 0.8 + 0.2, -maxImgW * (1.0 - t));
+        }
+
+        currentY += maxImgH + 16 * unit;
+      }
+
+      // 4. Render Left Headline Text
+      const userHeadline = (splitHeadline?.value || '').trim();
+      if (userHeadline) {
+        const fontSize = Number(splitTextSize?.value || 24) * unit;
+        ctx.font = `800 ${fontSize}px 'Noto Sans Telugu', 'Archivo Black', sans-serif`;
+        ctx.fillStyle = '#FFFFFF';
+        ctx.textAlign = align;
+        ctx.textBaseline = 'top';
+
+        const maxTextW = panelW - 24 * unit;
+        const headlineLines = getWrappedLines(ctx, userHeadline, maxTextW);
+        const lineHeight = fontSize * 1.25;
+
+        headlineLines.forEach((line) => {
+          ctx.fillText(line, textX, currentY);
+          currentY += lineHeight;
+        });
+        currentY += 8 * unit;
+      }
+
+      // 5. Render Optional Subheadline
+      const userSubhead = (splitSubheadline?.value || '').trim();
+      if (userSubhead) {
+        const subFontSize = Math.max(12 * unit, (Number(splitTextSize?.value || 24) * 0.72) * unit);
+        ctx.font = `700 ${subFontSize}px 'Noto Sans Telugu', 'Inter', sans-serif`;
+        ctx.fillStyle = '#E4202A';
+        ctx.textAlign = align;
+        ctx.textBaseline = 'top';
+
+        const maxSubW = panelW - 24 * unit;
+        const subLines = getWrappedLines(ctx, userSubhead, maxSubW);
+        const subLineHeight = subFontSize * 1.3;
+
+        subLines.forEach((line) => {
+          ctx.fillText(line, textX, currentY);
+          currentY += subLineHeight;
+        });
+        currentY += 10 * unit;
+      }
+
+      // Accent divider line
+      if (userHeadline || userSubhead) {
+        ctx.fillStyle = 'rgba(228,32,42,0.8)';
+        let divX = panelX + 16 * unit;
+        let divW = panelW - 32 * unit;
+        ctx.fillRect(divX, currentY, divW, 3 * unit);
+        currentY += 14 * unit;
+      }
+
+      // 6. Render Left Description / Main Content Text
+      const userDesc = (splitDescription?.value || '').trim();
+      if (userDesc) {
+        const descFontSize = Math.max(12 * unit, (Number(splitTextSize?.value || 24) * 0.65) * unit);
+        ctx.font = `600 ${descFontSize}px 'Noto Sans Telugu', 'Inter', sans-serif`;
+        ctx.fillStyle = 'rgba(255,255,255,0.88)';
+        ctx.textAlign = align;
+        ctx.textBaseline = 'top';
+
+        const maxDescW = panelW - 24 * unit;
+        const descLines = userDesc.split('\n').flatMap(l => getWrappedLines(ctx, l, maxDescW));
+        const descLineHeight = descFontSize * 1.35;
+
+        descLines.forEach((line) => {
+          if (currentY + descLineHeight < panelY + panelH - 10 * unit) {
+            ctx.fillText(line, textX, currentY);
+            currentY += descLineHeight;
+          }
+        });
+      }
+
+      // 7. Empty State Placeholder (if no headline, subheadline, description, or images)
+      if (!userHeadline && !userSubhead && !userDesc && numImages === 0) {
+        ctx.font = `700 ${16 * unit}px 'Archivo Black', sans-serif`;
+        ctx.fillStyle = 'rgba(255,255,255,0.35)';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('ADD CONTENT', panelX + panelW / 2, panelY + panelH / 2);
+      }
+
       ctx.restore();
     }
 
@@ -1258,25 +1609,30 @@
       }
     }catch(e){}
 
-    // Prefer broadly compatible WebM on Android/Chrome. MP4 MediaRecorder support
-    // varies by browser and can produce files with missing/incorrect audio metadata.
-    const candidates=[
-      'video/webm;codecs=vp9,opus',
-      'video/webm;codecs=vp8,opus',
-      'video/webm',
-      'video/mp4;codecs=avc1,mp4a.40.2',
+    const mp4Candidates=[
+      'video/mp4;codecs="avc1.42E01E,mp4a.40.2"',
       'video/mp4'
     ];
-    const mimeType=candidates.find(c=>window.MediaRecorder && MediaRecorder.isTypeSupported(c))||'video/webm';
-    const outExt=mimeType.startsWith('video/mp4')?'mp4':'webm';
+    const mimeType=mp4Candidates.find(c=>window.MediaRecorder && MediaRecorder.isTypeSupported(c))||null;
+    console.log("[MP4 SUPPORT]", mimeType);
+
+    if(!mimeType){
+      statusLine.textContent='Your current browser does not support direct MP4 recording.';
+      showToast('MP4 export is not supported','Your current browser does not support direct MP4 recording.','warning');
+      trimDownloadPending=false;
+      return;
+    }
+
     const bitrateMap={high:8000000,balanced:4500000,compact:2000000};
     const targetBitrate=bitrateMap[exportQuality.value]||4500000;
 
     try{
       mediaRecorder=new MediaRecorder(combinedStream,{mimeType,videoBitsPerSecond:targetBitrate,audioBitsPerSecond:128000});
     }catch(err){
-      statusLine.textContent='Export could not start on this browser. Please use Chrome or Edge.';
+      statusLine.textContent='Your current browser does not support direct MP4 recording.';
+      showToast('MP4 export is not supported','Your current browser does not support direct MP4 recording.','warning');
       mediaRecorder=null;
+      trimDownloadPending=false;
       return;
     }
 
@@ -1319,18 +1675,25 @@
       if(safetyTimer){clearTimeout(safetyTimer);safetyTimer=null;}
 
       const blob=new Blob(recordedChunks,{type:mimeType});
+      recordedChunks=[];
       if(!blob.size){
         statusLine.textContent='Export failed: no video data was recorded.';
+        showToast('Export failed','Please try again.','error');
         mediaRecorder=null;
+        trimDownloadPending=false;
         return;
       }
 
-      downloadBlob(blob,'btv-edited-video.webm');
+      downloadBlob(blob,'btv-edited-video.mp4');
+      statusLine.textContent='Download started. Your edited video download has started.';
+      showToast('Download started','Your edited video download has started.','success',4000);
+
       try{ sourceVideo.pause(); sourceVideo.currentTime=startAt; }catch(e){}
       try{ if(hasBgAudio){bgAudio.pause();bgAudio.currentTime=0;} }catch(e){}
       isPlaying=false;
       playBtn.textContent='▶ PLAY PREVIEW';
       mediaRecorder=null;
+      trimDownloadPending=false;
     };
 
     const begin=async()=>{

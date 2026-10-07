@@ -133,6 +133,66 @@
         </div>
       </details>
 
+      <details class="property-section" id="dualContentSection" open>
+        <summary>Content (Dual Window)</summary>
+
+        <div class="field-group">
+          <label class="field-label" for="splitHeadline">HEADLINE / TITLE</label>
+          <input type="text" id="splitHeadline" value="BTV SPECIAL REPORT" maxlength="80">
+        </div>
+
+        <div class="field-group">
+          <label class="field-label" for="splitSubheadline">SUBHEADLINE (OPTIONAL)</label>
+          <input type="text" id="splitSubheadline" value="LIVE BREAKING UPDATES" maxlength="80">
+        </div>
+
+        <div class="field-group">
+          <label class="field-label" for="splitDescription">MAIN CONTENT / DESCRIPTION</label>
+          <textarea id="splitDescription" rows="3">తాజా సమాచారం • రన్నింగ్ అప్‌డేట్స్ • ముఖ్య అంశాలు</textarea>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">SLIDESHOW IMAGES</label>
+          <button class="mini-btn red" id="addSplitImagesBtn" type="button" style="width:100%;margin-bottom:8px;">＋ ADD IMAGES</button>
+          <input type="file" id="splitImagesInput" accept="image/jpeg,image/jpg,image/png,image/webp" multiple style="display:none;">
+          <div id="splitImagesList" style="display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto;"></div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label" for="splitImageDuration">IMAGE DISPLAY TIME</label>
+          <select id="splitImageDuration">
+            <option value="2">2 seconds</option>
+            <option value="3" selected>3 seconds</option>
+            <option value="5">5 seconds</option>
+            <option value="10">10 seconds</option>
+          </select>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label" for="splitTransition">TRANSITION</label>
+          <select id="splitTransition">
+            <option value="cut">Cut</option>
+            <option value="fade" selected>Fade</option>
+            <option value="slideLeft">Slide Left</option>
+            <option value="slideRight">Slide Right</option>
+          </select>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">TEXT ALIGNMENT</label>
+          <div class="ratio-toggle">
+            <button type="button" id="splitAlignLeftBtn">LEFT</button>
+            <button type="button" id="splitAlignCenterBtn" class="active">CENTER</button>
+            <button type="button" id="splitAlignRightBtn">RIGHT</button>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">TEXT SIZE</label>
+          <input type="range" id="splitTextSize" min="14" max="42" value="24" class="vol-slider">
+        </div>
+      </details>
+
       <details class="property-section">
         <summary>Branding &amp; Framing</summary>
       <div class="field-group">
