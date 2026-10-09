@@ -119,6 +119,8 @@
   const watermarkToggle = document.getElementById('watermarkToggle');
   const watermarkText = document.getElementById('watermarkText');
   const watermarkSize = document.getElementById('watermarkSize');
+  const watermarkOpacity = document.getElementById('watermarkOpacity');
+  const watermarkOpacityValue = document.getElementById('watermarkOpacityValue');
   const watermarkX = document.getElementById('watermarkX');
   const watermarkY = document.getElementById('watermarkY');
   const watermarkSizeValue = document.getElementById('watermarkSizeValue');
@@ -163,6 +165,7 @@
   let showTicker = true;
   let showWatermark = true;
   let watermarkSizePct = 70;
+  let watermarkOpacityPct = 25;
   let watermarkXPos = 0;
   let watermarkYPos = 0;
   let footerStyle = 'classic';
@@ -933,13 +936,15 @@
   function wmPositionLabel(v, a, b){ v=Number(v)||0; if(Math.abs(v)<4) return 'CENTER'; return v<0 ? `${a} ${Math.abs(v)}%` : `${b} ${Math.abs(v)}%`; }
   function syncWatermarkControls(){
     watermarkSizePct = Number(watermarkSize.value)||70;
+    watermarkOpacityPct = Math.max(0, Math.min(100, Number(watermarkOpacity?.value ?? 25)));
     watermarkXPos = clampWM(watermarkX.value);
     watermarkYPos = clampWM(watermarkY.value);
-    watermarkSizeValue.textContent = `${watermarkSizePct}%`;
-    watermarkXValue.textContent = wmPositionLabel(watermarkXPos,'LEFT','RIGHT');
-    watermarkYValue.textContent = wmPositionLabel(watermarkYPos,'UP','DOWN');
+    if(watermarkSizeValue) watermarkSizeValue.textContent = `${watermarkSizePct}%`;
+    if(watermarkOpacityValue) watermarkOpacityValue.textContent = `${watermarkOpacityPct}%`;
+    if(watermarkXValue) watermarkXValue.textContent = wmPositionLabel(watermarkXPos,'LEFT','RIGHT');
+    if(watermarkYValue) watermarkYValue.textContent = wmPositionLabel(watermarkYPos,'UP','DOWN');
   }
-  [watermarkSize, watermarkX, watermarkY].forEach(el=>el.addEventListener('input',()=>{ syncWatermarkControls(); draw(); }));
+  [watermarkSize, watermarkOpacity, watermarkX, watermarkY].filter(Boolean).forEach(el=>el.addEventListener('input',()=>{ syncWatermarkControls(); draw(); }));
   watermarkText.addEventListener('input',draw);
   function nudgeWatermark(dx,dy){
     watermarkX.value = clampWM(Number(watermarkX.value)+dx);
@@ -950,7 +955,7 @@
   wmRightBtn.addEventListener('click',()=>nudgeWatermark(8,0));
   wmUpBtn.addEventListener('click',()=>nudgeWatermark(0,-8));
   wmDownBtn.addEventListener('click',()=>nudgeWatermark(0,8));
-  wmResetBtn.addEventListener('click',()=>{ watermarkSize.value=70; watermarkX.value=0; watermarkY.value=0; syncWatermarkControls(); draw(); });
+  wmResetBtn.addEventListener('click',()=>{ watermarkSize.value=70; if(watermarkOpacity) watermarkOpacity.value=25; watermarkX.value=0; watermarkY.value=0; syncWatermarkControls(); draw(); });
   syncWatermarkControls();
   newsType.addEventListener('change',draw);
 
@@ -968,6 +973,119 @@
     ctx.arcTo(x,y+h,x,y,r);
     ctx.arcTo(x,y,x+w,y,r);
     ctx.closePath();
+  }
+
+  function drawBellIcon(ctx, cx, cy, size, color) {
+    ctx.save();
+    ctx.fillStyle = color || '#FFDD00';
+    ctx.strokeStyle = color || '#FFDD00';
+
+    ctx.save();
+    ctx.translate(cx - size * 0.5, cy - size * 0.5);
+    const scale = size / 24;
+    ctx.scale(scale, scale);
+    const bellPath = new Path2D("M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z");
+    ctx.fill(bellPath);
+    ctx.restore();
+
+    ctx.restore();
+  }
+
+  function drawFooterSocialIcon(ctx, type, cx, cy, size) {
+    ctx.save();
+    const r = size / 2;
+
+    if (type === 'youtube') {
+      // YouTube: authentic red play-button logo inside a white circular badge
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fill();
+
+      const w = size * 0.52;
+      const h = size * 0.36;
+      ctx.fillStyle = '#FF0000';
+      roundRectPath(cx - w / 2, cy - h / 2, w, h, size * 0.08);
+      ctx.fill();
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.moveTo(cx - w * 0.12, cy - h * 0.26);
+      ctx.lineTo(cx - w * 0.12, cy + h * 0.26);
+      ctx.lineTo(cx + w * 0.24, cy);
+      ctx.closePath();
+      ctx.fill();
+    } else if (type === 'x') {
+      // X/Twitter: blue circular badge with white bird logo
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fillStyle = '#1DA1F2';
+      ctx.fill();
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.save();
+      ctx.translate(cx - size * 0.36, cy - size * 0.36);
+      const scale = (size * 0.72) / 24;
+      ctx.scale(scale, scale);
+      const birdPath = new Path2D("M22.46 6c-.77.35-1.6.58-2.46.69.88-.53 1.56-1.37 1.88-2.38-.83.5-1.75.85-2.72 1.05C18.37 4.5 17.26 4 16 4c-2.35 0-4.27 1.92-4.27 4.29 0 .34.04.67.11.98C8.28 9.09 5.11 7.38 3 4.79c-.37.63-.58 1.37-.58 2.15 0 1.49.75 2.81 1.91 3.56-.71 0-1.37-.2-1.95-.5v.05c0 2.08 1.48 3.82 3.44 4.21a4.22 4.22 0 0 1-1.93.07 4.28 4.28 0 0 0 4 2.98 8.56 8.56 0 0 1-5.33 1.84c-.34 0-.68-.02-1.02-.06C3.44 20.29 5.7 21 8.12 21 16 21 20.33 14.46 20.33 8.79v-.41C21.17 7.7 21.89 6.9 22.46 6z");
+      ctx.fill(birdPath);
+      ctx.restore();
+    } else if (type === 'google') {
+      // Google: authentic multicolored Google G inside a white circular badge
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fill();
+
+      ctx.save();
+      ctx.translate(cx - size * 0.32, cy - size * 0.32);
+      const scale = (size * 0.64) / 24;
+      ctx.scale(scale, scale);
+
+      const gBlue = new Path2D("M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z");
+      const gGreen = new Path2D("M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z");
+      const gYellow = new Path2D("M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z");
+      const gRed = new Path2D("M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z");
+
+      ctx.fillStyle = '#4285F4'; ctx.fill(gBlue);
+      ctx.fillStyle = '#34A853'; ctx.fill(gGreen);
+      ctx.fillStyle = '#FBBC05'; ctx.fill(gYellow);
+      ctx.fillStyle = '#EA4335'; ctx.fill(gRed);
+      ctx.restore();
+    } else if (type === 'instagram') {
+      // Instagram: authentic Instagram gradient camera logo inside a circular badge
+      const grad = ctx.createLinearGradient(cx - r, cy + r, cx + r, cy - r);
+      grad.addColorStop(0, '#FFD600');
+      grad.addColorStop(0.25, '#FF7A00');
+      grad.addColorStop(0.5, '#FF0069');
+      grad.addColorStop(0.75, '#D300C5');
+      grad.addColorStop(1, '#7638FA');
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      // Camera outline
+      const boxS = size * 0.46;
+      const rx = size * 0.12;
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.lineWidth = Math.max(1.8, size * 0.07);
+      roundRectPath(cx - boxS / 2, cy - boxS / 2, boxS, boxS, rx);
+      ctx.stroke();
+
+      // Lens circle
+      ctx.beginPath();
+      ctx.arc(cx, cy, size * 0.14, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Flash dot
+      ctx.beginPath();
+      ctx.arc(cx + boxS * 0.26, cy - boxS * 0.26, size * 0.04, 0, Math.PI * 2);
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fill();
+    }
+    ctx.restore();
   }
 
   function getWrappedLines(context, text, maxWidth) {
@@ -1065,18 +1183,17 @@
     const toggleTextScale = Number(toggleTextSize?.value || 13)/13;
     const brandColor = safeColor(btvBgColor?.value || '#1730C4','#1730C4');
 
-    // ---- CENTER WATERMARK (semi-transparent, sits over the footage) ----
-    if(showWatermark && hasVideo){
+    // ---- CENTER WATERMARK (horizontal, semi-transparent, sits over the video) ----
+    if(showWatermark){
       ctx.save();
       const wx = w/2 + (watermarkXPos/100) * (w*0.42);
       const wy = h/2 + (watermarkYPos/100) * (h*0.42);
       ctx.translate(wx, wy);
-      ctx.rotate(-0.08);
       ctx.font = `900 ${h*0.07*(watermarkSizePct/70)}px 'Archivo Black', sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillStyle = 'rgba(255,255,255,0.16)';
-      ctx.fillText((watermarkText.value || 'BTV NEWS').toUpperCase(), 0, 0);
+      ctx.fillStyle = `rgba(255,255,255,${watermarkOpacityPct / 100})`;
+      ctx.fillText((watermarkText.value || 'BTV MEDIA').toUpperCase(), 0, 0);
       ctx.restore();
     }
 
@@ -1457,83 +1574,178 @@
       }
       tickerOffset += w*(0.00055 + tickerSpeedValueNum*0.00052);
 
-      // ---- BTV SOCIAL SUBSCRIBE FOOTER (same branded footer across all skins) ----
+      // ---- BTV REDESIGNED BROADCAST FOOTER (Matching Reference Image) ----
       if(showSocialFooter){
-        const sfH = Math.min(52*unit, socialH);
-        const sfY = Math.max(0, Math.min(h-sfH,tickerY+tickerRowH));
+        const sfH = Math.min(54 * unit, ratio === '9:16' ? h * 0.055 : h * 0.082);
+        const sfY = Math.max(0, Math.min(h - sfH, tickerY + tickerRowH));
         ctx.save();
-        ctx.beginPath(); ctx.rect(0,sfY,w,sfH); ctx.clip();
-        ctx.fillStyle=safeColor(footerBgColor?.value || '#E4202A','#E4202A');
-        ctx.fillRect(0,sfY,w,sfH);
-        ctx.fillStyle='rgba(255,255,255,0.12)';
-        ctx.beginPath(); ctx.moveTo(0,sfY); ctx.lineTo(w*.52,sfY); ctx.lineTo(w*.44,sfY+sfH); ctx.lineTo(0,sfY+sfH); ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.rect(0, sfY, w, sfH); ctx.clip();
 
-        // Clean, readable subscribe message.
-        const socialMsg = footerMessage.value || socialFooterText.value || 'For more videos!  Follow Btv Media';
-        const iconAreaW = Math.min(160*unit,w*0.30);
-        const subscribeX = 10*unit;
-        const subscribeY = sfY+sfH*.11;
-        const subscribeW = Math.min(300*unit,w*(ratio==='16:9'?.14:.24));
-        const subscribeH = sfH*.78;
-        const msgX = subscribeX+subscribeW+10*unit;
-        const maxMsgW = Math.max(0,w-iconAreaW-msgX);
-        let msgSize = Math.min(Number(footerTextSize?.value || 25)*unit,sfH*0.48);
-        const footerFamily=footerFont?.value || 'Roboto Condensed';
-        ctx.font=`800 ${msgSize}px '${footerFamily}', 'Noto Sans Telugu', sans-serif`;
-        while(ctx.measureText(socialMsg).width > maxMsgW && msgSize > 6*unit){
-          msgSize -= 0.5*unit;
-          ctx.font=`800 ${msgSize}px '${footerFamily}', 'Noto Sans Telugu', sans-serif`;
+        // 1. Red base background
+        const baseBgColor = footerBgColor?.value || '#E4202A';
+        ctx.fillStyle = baseBgColor;
+        ctx.fillRect(0, sfY, w, sfH);
+
+        // 2. Broadcast Slanted Shapes
+        // Left accent dark red slant
+        ctx.fillStyle = '#9E0B13';
+        ctx.beginPath();
+        ctx.moveTo(0, sfY);
+        ctx.lineTo(w * 0.38, sfY);
+        ctx.lineTo(w * 0.32, sfY + sfH);
+        ctx.lineTo(0, sfY + sfH);
+        ctx.closePath();
+        ctx.fill();
+
+        // Right social section black slanted bar
+        const rightSlantWidth = ratio === '9:16' ? w * 0.42 : w * 0.28;
+        const rightSlantX = w - rightSlantWidth;
+        const slantOverlap = 20 * unit;
+
+        ctx.fillStyle = '#0F0F12';
+        ctx.beginPath();
+        ctx.moveTo(rightSlantX + slantOverlap, sfY);
+        ctx.lineTo(w, sfY);
+        ctx.lineTo(w, sfY + sfH);
+        ctx.lineTo(rightSlantX, sfY + sfH);
+        ctx.closePath();
+        ctx.fill();
+
+        // Thin yellow border on slant edge
+        ctx.strokeStyle = '#FFDD00';
+        ctx.lineWidth = 2.5 * unit;
+        ctx.beginPath();
+        ctx.moveTo(rightSlantX + slantOverlap, sfY);
+        ctx.lineTo(rightSlantX, sfY + sfH);
+        ctx.stroke();
+
+        // 3. Parse footer text message
+        const rawMsg = footerMessage.value || socialFooterText.value || 'For more updates!  Subscribe Btv Media';
+        let part1Text = 'For more updates!';
+        let subPrefixText = 'Subscribe ';
+        let subHighlightText = 'Btv Media';
+
+        if (rawMsg.includes('!')) {
+          const splitIdx = rawMsg.indexOf('!');
+          part1Text = rawMsg.substring(0, splitIdx + 1).trim();
+          const remainder = rawMsg.substring(splitIdx + 1).trim();
+          if (remainder.toLowerCase().includes('btv media')) {
+            const btvIdx = remainder.toLowerCase().indexOf('btv media');
+            subPrefixText = remainder.substring(0, btvIdx);
+            subHighlightText = remainder.substring(btvIdx);
+          } else if (remainder) {
+            const words = remainder.split(' ');
+            if (words.length > 1) {
+              subHighlightText = words.pop();
+              subPrefixText = words.join(' ') + ' ';
+            } else {
+              subHighlightText = remainder;
+              subPrefixText = '';
+            }
+          }
+        } else {
+          part1Text = rawMsg;
         }
 
-        const effectActive=subscribePreviewEffect?.id==='footer-subscribe' && Date.now()-subscribePreviewEffect.startedAt<(subscribePreviewEffect.duration||800) && !(mediaRecorder && mediaRecorder.state==='recording');
-        beginPreviewControl('footer-subscribe',subscribeX,subscribeY,subscribeW,subscribeH);
-        ctx.fillStyle=showSub?'#8F1820':'#59141A';
-        roundRectPath(subscribeX,subscribeY,subscribeW,subscribeH,5*unit); ctx.fill();
-        ctx.strokeStyle='rgba(255,255,255,.88)'; ctx.lineWidth=1.2*unit;
-        roundRectPath(subscribeX,subscribeY,subscribeW,subscribeH,5*unit); ctx.stroke();
-        const subscribeLabel=effectActive?'SUBSCRIBED ✓':'SUBSCRIBE';
-        let subscribeFontSize=Math.min(18*unit,subscribeH*.42);
-        ctx.font=`900 ${subscribeFontSize}px 'Space Grotesk',sans-serif`;
-        while(ctx.measureText(subscribeLabel).width>subscribeW-14*unit && subscribeFontSize>6*unit){
-          subscribeFontSize-=0.5*unit;
-          ctx.font=`900 ${subscribeFontSize}px 'Space Grotesk',sans-serif`;
+        const footerFamily = footerFont?.value || 'Roboto Condensed';
+        let font1Size = Math.min(Number(footerTextSize?.value || 25) * unit * 0.85, sfH * 0.40);
+        
+        // Auto-scale font if width is tight (e.g. in 9:16 mode)
+        const maxLeftWidth = (rightSlantX + slantOverlap) - 15 * unit;
+        ctx.font = `800 ${font1Size}px '${footerFamily}', 'Noto Sans Telugu', sans-serif`;
+        
+        const ytBadgeW = Math.min(30 * unit, sfH * 0.52);
+        const ytBadgeH = Math.min(20 * unit, sfH * 0.36);
+        const bellSize = Math.min(18 * unit, sfH * 0.38);
+
+        let calcW = (12 * unit + ytBadgeW + 8 * unit) +
+                     ctx.measureText(part1Text).width + (18 * unit) +
+                     bellSize + (8 * unit) +
+                     ctx.measureText(subPrefixText).width +
+                     ctx.measureText(subHighlightText).width;
+
+        while (calcW > maxLeftWidth && font1Size > 8 * unit) {
+          font1Size -= 0.5 * unit;
+          ctx.font = `800 ${font1Size}px '${footerFamily}', 'Noto Sans Telugu', sans-serif`;
+          calcW = (12 * unit + ytBadgeW + 8 * unit) +
+                  ctx.measureText(part1Text).width + (18 * unit) +
+                  bellSize + (8 * unit) +
+                  ctx.measureText(subPrefixText).width +
+                  ctx.measureText(subHighlightText).width;
         }
-        ctx.fillStyle='#fff'; ctx.textAlign='center'; ctx.textBaseline='middle';
-        ctx.fillText(subscribeLabel,subscribeX+subscribeW/2,subscribeY+subscribeH/2+1);
-        ctx.restore();
 
-        ctx.save();
-        ctx.beginPath(); ctx.rect(msgX,sfY,maxMsgW,sfH); ctx.clip();
-        ctx.fillStyle=safeColor(footerTextColor?.value || '#FFFFFF','#FFFFFF'); ctx.textAlign='left'; ctx.textBaseline='middle';
-        ctx.font=`800 ${msgSize}px '${footerFamily}', 'Noto Sans Telugu', sans-serif`;
-        ctx.fillText(socialMsg,msgX,sfY+sfH/2);
-        ctx.restore();
+        // --- Render Left-to-Right Elements ---
+        let curX = 12 * unit;
+        const centerY = sfY + sfH / 2;
 
-        youtubeHitAreas.push({id:'footer-subscribe',x:subscribeX,y:subscribeY,width:subscribeW,height:subscribeH});
+        // A. YouTube Play Icon Badge
+        const ytBadgeDiameter = Math.min(28 * unit, sfH * 0.58);
+        drawFooterSocialIcon(ctx, 'youtube', curX + ytBadgeDiameter / 2, centerY, ytBadgeDiameter);
+        curX += ytBadgeDiameter + 8 * unit;
 
-        // Standalone platform marks, packed right-to-left to preserve the requested left-to-right order.
-        const sr=Math.min(Number(socialIconSize?.value || 28)*0.42*unit,sfH*.42,w*0.021);
-        const iconGap=Math.min(5*unit,sr*.75);
-        let iconX=w-14*unit-2*sr;
-        const cy=sfY+sfH/2;
-        // Facebook
-        ctx.fillStyle='#fff'; ctx.font=`900 ${sr*1.85}px Arial`; ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('f',iconX+sr,cy+1*unit); iconX-=2*sr+iconGap;
-        // Instagram
-        ctx.strokeStyle='#fff'; ctx.lineWidth=Math.max(1.5*unit,sr*.10);
-        roundRectPath(iconX+sr*.28,cy-sr*.72,sr*1.44,sr*1.44,sr*.34); ctx.stroke();
-        ctx.beginPath();ctx.arc(iconX+sr,cy,sr*.34,0,Math.PI*2);ctx.stroke();
-        ctx.beginPath();ctx.arc(iconX+sr*1.49,cy-sr*.49,sr*.10,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill(); iconX-=2*sr+iconGap;
-        // X
-        ctx.strokeStyle='#fff'; ctx.lineWidth=Math.max(1.8*unit,sr*.13); ctx.lineCap='round';
-        ctx.beginPath();ctx.moveTo(iconX+sr*.38,cy-sr*.60);ctx.lineTo(iconX+sr*1.62,cy+sr*.60);ctx.moveTo(iconX+sr*1.62,cy-sr*.60);ctx.lineTo(iconX+sr*.38,cy+sr*.60);ctx.stroke(); iconX-=2*sr+iconGap;
-        // Google+
-        ctx.textBaseline='middle';ctx.textAlign='left';ctx.font=`800 ${sr*1.15}px Arial`;
-        ctx.fillStyle='#4285F4';ctx.fillText('G',iconX+sr*.12,cy+1*unit);
-        ctx.fillStyle='#34A853';ctx.font=`700 ${sr*.85}px Arial`;ctx.fillText('+',iconX+sr*1.20,cy+1*unit); iconX-=2*sr+iconGap;
-        // YouTube
-        const ytX=iconX+sr*.15, ytY=cy-sr*.48, ytW=sr*1.70, ytH=sr*.96;
-        ctx.strokeStyle='#fff';ctx.lineWidth=Math.max(1.4*unit,sr*.10);roundRectPath(ytX,ytY,ytW,ytH,sr*.28);ctx.stroke();
-        ctx.fillStyle='#fff';ctx.beginPath();ctx.moveTo(iconX+sr*.78,cy-sr*.26);ctx.lineTo(iconX+sr*.78,cy+sr*.26);ctx.lineTo(iconX+sr*1.24,cy);ctx.closePath();ctx.fill();
+        // B. Text: For more updates!
+        ctx.fillStyle = footerTextColor?.value || '#FFFFFF';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.font = `800 ${font1Size}px '${footerFamily}', 'Noto Sans Telugu', sans-serif`;
+        ctx.fillText(part1Text, curX, centerY);
+        curX += ctx.measureText(part1Text).width + 10 * unit;
+
+        // C. Vertical Separator
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+        ctx.lineWidth = 1.5 * unit;
+        ctx.beginPath();
+        ctx.moveTo(curX, sfY + sfH * 0.25);
+        ctx.lineTo(curX, sfY + sfH * 0.75);
+        ctx.stroke();
+        curX += 10 * unit;
+
+        // D. Yellow Notification Bell Icon
+        drawBellIcon(ctx, curX + bellSize / 2, centerY, bellSize, '#FFDD00');
+        curX += bellSize + 8 * unit;
+
+        // E. Text: Subscribe Btv Media (Btv Media in Yellow)
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = `800 ${font1Size}px '${footerFamily}', 'Noto Sans Telugu', sans-serif`;
+        ctx.fillText(subPrefixText, curX, centerY);
+        curX += ctx.measureText(subPrefixText).width;
+
+        ctx.fillStyle = '#FFDD00';
+        ctx.font = `900 ${font1Size}px '${footerFamily}', 'Noto Sans Telugu', sans-serif`;
+        ctx.fillText(subHighlightText, curX, centerY);
+
+        // F. Right Social Icons (YouTube, X/Twitter, Google, Instagram)
+        const socialTypes = ['youtube', 'x', 'google', 'instagram'];
+        const socialStartX = rightSlantX + slantOverlap + 6 * unit;
+        const availableSocialW = w - socialStartX - 6 * unit;
+        const iconSlotW = availableSocialW / socialTypes.length;
+        const badgeSize = Math.min(26 * unit, sfH * 0.60, iconSlotW * 0.68);
+
+        socialTypes.forEach((type, idx) => {
+          const iconCx = socialStartX + (idx + 0.5) * iconSlotW;
+          drawFooterSocialIcon(ctx, type, iconCx, centerY, badgeSize);
+
+          // Thin separator between icons
+          if (idx < socialTypes.length - 1) {
+            const sepX = socialStartX + (idx + 1) * iconSlotW;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+            ctx.lineWidth = 1 * unit;
+            ctx.beginPath();
+            ctx.moveTo(sepX, sfY + sfH * 0.30);
+            ctx.lineTo(sepX, sfY + sfH * 0.70);
+            ctx.stroke();
+          }
+        });
+
+        // Register interactive hit area
+        youtubeHitAreas.push({
+          id: 'footer-subscribe',
+          x: 12 * unit,
+          y: sfY,
+          width: maxLeftWidth,
+          height: sfH
+        });
+
         ctx.restore();
       }
 
